@@ -22,7 +22,7 @@ export default function DocumentEditor() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-xl bg-slate-50/50 dark:bg-[#1e1e2e] shadow-xl shadow-brand-900/5 mt-4 ml-4">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/30 dark:bg-[#141422]">
       <EditorToolbar />
       <div className="flex-1 relative">
         <div id="superdoc-demo-main-editor" className="flex-1 relative transition-colors duration-200 h-full overflow-y-auto p-4 md:p-8 flex justify-center">
@@ -53,7 +53,7 @@ export default function DocumentEditor() {
 
         {/* Floating AI Prompt */}
         {currentDocument && (
-          <div className="flex justify-center w-full mt-4 absolute bottom-[35px] pr-[36px]" style={{ height: '46px', marginBottom: '0px' }}>
+          <div className="flex justify-center w-full mt-4 absolute bottom-[35px]" style={{ height: '46px', marginBottom: '0px' }}>
             <div className="flex flex-col items-center mx-auto z-20 w-full min-w-[510px] max-w-[510px] px-4 pointer-events-none max-[800px]:hidden">
               <form className="pointer-events-auto flex items-center gap-2 p-[1px] w-full rounded-full bg-gradient-to-r from-purple-400 via-violet-500 to-purple-600 shadow-md shadow-slate-300/40 dark:shadow-black/30 hover:ring-1 hover:ring-purple-600/70 active:ring-1 active:ring-purple-700/90 transition-all">
                 <div className="flex flex-1 items-center gap-2 bg-white dark:bg-[#1e1e2e] rounded-full py-1.5 pl-4 pr-1.5">
