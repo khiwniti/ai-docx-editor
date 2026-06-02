@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { tmpdir } from 'os';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = join(process.cwd(), 'uploads');
+    // Use /tmp for serverless environment compatibility (e.g. Vercel)
+    const uploadsDir = join(tmpdir(), 'superdoc-uploads');
     await mkdir(uploadsDir, { recursive: true });
 
     const fileName = `${Date.now()}_${file.name}`;
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       fileName,
-      filePath: `/uploads/${fileName}`,
+      filePath: `/api/documents/export?file=${encodeURIComponent(fileName)}`,
       size: file.size,
     });
   } catch (error) {

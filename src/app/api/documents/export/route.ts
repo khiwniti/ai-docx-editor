@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { tmpdir } from 'os';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const filePath = join(process.cwd(), 'uploads', fileName);
+    const filePath = join(tmpdir(), 'superdoc-uploads', fileName);
 
     try {
       const fileBuffer = await readFile(filePath);

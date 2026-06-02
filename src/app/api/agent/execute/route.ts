@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeAgentInstruction, AgentType } from '@/lib/agent-orchestrator';
 import { mcpClient } from '@/lib/mcp-client';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Allow AI agents to run longer on Vercel Pro/Hobby (up to tier limits)
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
