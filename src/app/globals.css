@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+  --color-dark-700: #2a2a3e;
+  --color-dark-800: #1e1e2e;
+  --color-dark-900: #141422;
+}
+
+/* SuperDoc Editor Styles */
+.superdoc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  min-height: 36px;
+}
+
+.superdoc-toolbar .button-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.superdoc-toolbar .toolbar-item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.superdoc-toolbar .toolbar-item:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.dark .superdoc-toolbar .toolbar-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.superdoc-toolbar .toolbar-button.active {
+  background-color: rgba(79, 70, 229, 0.12);
+  color: #4f46e5;
+}
+
+.dark .superdoc-toolbar .toolbar-button.active {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+
+.superdoc-toolbar .toolbar-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.superdoc-toolbar .toolbar-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.superdoc-toolbar .toolbar-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Chat animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.chat-panel-enter {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.chat-message-enter {
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.typing-dot {
+  animation: pulse-dot 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* SuperDoc page styling */
+.superdoc-page {
+  background: var(--sd-layout-page-bg, #fff);
+  box-shadow: var(--sd-layout-page-shadow, 0 4px 20px rgba(15, 23, 42, 0.08));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.dark .superdoc-page {
+  background: #1e1e2e;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Glassmorphism override for dark mode */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-surface {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* MCP tool call badge */
+.mcp-tool-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+  background: rgba(79, 70, 229, 0.1);
+  color: #6366f1;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.dark .mcp-tool-badge {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.3);
+}
