@@ -15,9 +15,9 @@ export interface ChatMessage {
 
 export function useAIChat() {
   const { activeAgent } = useEditorContext();
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
-      id: 'welcome',
+      id: 'system-1',
       role: 'system',
       content: 'AI Document Agent ready. Select an agent and describe what you want to do with your document.',
       timestamp: Date.now(),
