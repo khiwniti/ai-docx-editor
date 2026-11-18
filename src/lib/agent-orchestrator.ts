@@ -1,4 +1,5 @@
 import { mcpClient, MCPToolCall, MCPToolResult } from './mcp-client';
+import { nimChat, extractJson } from './nim';
 
 export type AgentType = 'reviewer' | 'writer' | 'analyst' | 'formatter';
 
@@ -54,6 +55,16 @@ export const AGENT_PROFILES: AgentProfile[] = [
   },
 ];
 
+const ALLOWED_TOOLS = new Set([
+  'superdoc_get_content',
+  'superdoc_search',
+  'superdoc_edit',
+  'superdoc_format',
+  'superdoc_create',
+  'superdoc_list',
+  'superdoc_save',
+]);
+
 export async function executeAgentInstruction(
   sessionId: string,
   instruction: string,
@@ -71,8 +82,59 @@ export async function executeAgentInstruction(
   const actions: AgentAction[] = [];
   const instructionLower = instruction.toLowerCase();
 
-  // Plan tool calls based on instruction analysis
-  const toolCalls = planToolCalls(instructionLower, agentType);
+  // Always start by reading the document so the LLM can plan real edits.
+  const readCall: MCPToolCall = { tool: 'superdoc_get_content', arguments: { format: 'text' } };
+  const readResult = await mcpClient.callTool(sessionId, readCall);
+  actions.push({
+    tool: readCall.tool,
+    description: describeToolCall(readCall),
+    result: readResult,
+    timestamp: Date.now(),
+  });
+
+  const readData = readResult.data as { content?: string } | undefined;
+  const docContent =
+    typeof readData?.content === 'string'
+      ? readData.content
+      : readResult.data
+        ? JSON.stringify(readResult.data)
+        : '';
+
+  // Plan the tool calls via LLM; fall back to keyword rules if the LLM plan fails.
+  let toolCalls: MCPToolCall[] = [];
+  try {
+    const planText = await nimChat(
+      [
+        {
+          role: 'system',
+          content:
+            'You are an AI document agent planner. Given a document and an instruction, reply with ONLY a JSON object: { "tools": [ { "tool": string, "arguments": object } ] }. ' +
+            'Allowed tools: superdoc_search, superdoc_edit, superdoc_format, superdoc_create, superdoc_list. ' +
+            'Tool argument hints: superdoc_edit { action: "replace", content: string } — the content MUST be the real replacement text derived from the instruction and document. ' +
+            'superdoc_create { type: "paragraph", content: string } — the content MUST be real text to insert. ' +
+            'superdoc_search { query: string } — superdoc_format { formatting: object } — superdoc_list { action: "create", type: "bullet" }. ' +
+            'Only include tools that are actually needed. Do NOT invent other tool names.',
+        },
+        {
+          role: 'user',
+          content: `Document content (may be truncated):\n${docContent.slice(0, 4000)}\n\nInstruction: ${instruction}`,
+        },
+      ],
+      { temperature: 0.2, maxTokens: 1200 }
+    );
+    const parsed = extractJson(planText);
+    if (parsed && Array.isArray(parsed.tools)) {
+      toolCalls = parsed.tools
+        .filter((t: any) => typeof t?.tool === 'string' && ALLOWED_TOOLS.has(t.tool))
+        .map((t: any) => ({ tool: t.tool, arguments: t.arguments || {} }));
+    }
+  } catch (err) {
+    console.warn('LLM planning failed, falling back to rule-based plan:', err);
+  }
+
+  if (toolCalls.length === 0) {
+    toolCalls = planToolCalls(instructionLower, agentType);
+  }
 
   for (const toolCall of toolCalls) {
     const result = await mcpClient.callTool(sessionId, toolCall);
@@ -84,7 +146,41 @@ export async function executeAgentInstruction(
     });
   }
 
-  const message = generateResponse(instruction, actions, profile);
+  // Always save after modifications
+  if (actions.length > 1) {
+    const saveCall: MCPToolCall = { tool: 'superdoc_save', arguments: {} };
+    const saveResult = await mcpClient.callTool(sessionId, saveCall);
+    actions.push({
+      tool: saveCall.tool,
+      description: describeToolCall(saveCall),
+      result: saveResult,
+      timestamp: Date.now(),
+    });
+  }
+
+  // Final user-facing message via LLM; fall back to the canned summary.
+  let message = generateResponse(instruction, actions, profile);
+  try {
+    const resultsSummary = actions
+      .map((a) => `- ${a.tool}: ${a.result.success ? 'ok' : `error: ${a.result.error}`}`)
+      .join('\n');
+    const llmMessage = await nimChat(
+      [
+        {
+          role: 'system',
+          content: `${profile.systemPrompt} You just executed document operations for the user. Write a concise, friendly summary (2-4 sentences) of what you did and what changed. Use Markdown bullets if helpful.`,
+        },
+        {
+          role: 'user',
+          content: `User instruction: ${instruction}\n\nExecuted operations:\n${resultsSummary}\n\nDocument excerpt:\n${docContent.slice(0, 2000)}`,
+        },
+      ],
+      { temperature: 0.5, maxTokens: 500 }
+    );
+    if (llmMessage.trim()) message = llmMessage.trim();
+  } catch (err) {
+    console.warn('LLM summary failed, using canned response:', err);
+  }
 
   return {
     message,
